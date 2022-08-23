@@ -13,6 +13,7 @@ namespace BloggingApis.Controllers
 {
     [Route("api/[controller]/{action}")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class BlogCategoryController : ControllerBase
     {
         private readonly IBlogCategoryService blogCategoryService;
@@ -62,10 +63,6 @@ namespace BloggingApis.Controllers
             return Ok(status);
         }
 
-        [HttpGet]
-        public IActionResult Test()
-        {
-            return Ok("Hi");
-        }
+        
     }
 }

@@ -27,8 +27,8 @@ namespace BloggingApis.Controllers
             this.userManager = userManager;
             this.roleManager = roleManager;
             _configuration = configuration;
-        }
 
+        }
 
         [HttpPost]
         [Route("login")]
@@ -59,13 +59,16 @@ namespace BloggingApis.Controllers
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                     );
 
-                return Ok(new
+                return Ok(new LoginResponse
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Expiration = token.ValidTo,
+                    StatusCode = 1,
+                    Message = "Logged in"
                 });
             }
-            return Unauthorized();
+            return Ok(new LoginResponse { StatusCode = 0, Message = "Invalid Username or Password", Token = "", Expiration = null });
+
         }
 
         [HttpPost]
@@ -81,7 +84,7 @@ namespace BloggingApis.Controllers
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
                 UserName = model.Username,
-                Name=model.Name
+                Name = model.Name
             };
             var result = await userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
@@ -115,7 +118,7 @@ namespace BloggingApis.Controllers
             };
             var result = await userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Status { StatusCode =0, Message = "User creation failed! Please check user details and try again." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new Status { StatusCode = 0, Message = "User creation failed! Please check user details and try again." });
 
             if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
@@ -129,7 +132,6 @@ namespace BloggingApis.Controllers
 
             return Ok(new Status { StatusCode = 1, Message = "User created successfully!" });
         }
-
 
     }
 }

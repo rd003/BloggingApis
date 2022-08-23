@@ -83,12 +83,9 @@ namespace BloggingApis
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
-            //app.UseEndpoints(endpoints =>
-            //{
-            //    endpoints.MapControllers();
-            //});
-
+            app.UseCors(
+                options =>
+                options.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
