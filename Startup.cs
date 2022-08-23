@@ -81,11 +81,13 @@ namespace BloggingApis
             app.UseHttpsRedirection();
 
             app.UseRouting();
-            app.UseAuthentication();
-            app.UseAuthorization();
             app.UseCors(
                 options =>
                 options.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
