@@ -31,6 +31,38 @@ namespace BloggingApis.Controllers
         }
 
         [HttpPost]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
+        {
+            var status = new Status();
+            if(!ModelState.IsValid)
+            {
+                status.Message = "Please pass all the fields";
+                status.StatusCode = 0;
+                return Ok(status);
+            }
+            var user = await userManager.FindByNameAsync(model.Username);
+            if(user==null)
+            {
+                status.Message = "User does not exist";
+                status.StatusCode = 0;
+                return Ok(status);
+            }
+            var result = await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if(result.Succeeded)
+            {
+                status.Message = "Password has updated successfully";
+                status.StatusCode = 1;
+            }
+            else
+            {
+                status.Message = $"Some error occcured";
+                status.StatusCode = 0;
+            }
+            return Ok(status);
+        }
+
+        [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
