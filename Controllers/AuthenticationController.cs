@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BloggingApis.Models.Domain;
 using BloggingApis.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,7 @@ namespace BloggingApis.Controllers
 
         [HttpPost]
         [Route("change-password")]
+        [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordModel model)
         {
             var status = new Status();
@@ -45,6 +47,12 @@ namespace BloggingApis.Controllers
             if(user==null)
             {
                 status.Message = "User does not exist";
+                status.StatusCode = 0;
+                return Ok(status);
+            }
+            if(!await userManager.CheckPasswordAsync(user, model.CurrentPassword))
+            {
+                status.Message = "Incorrect current password";
                 status.StatusCode = 0;
                 return Ok(status);
             }
