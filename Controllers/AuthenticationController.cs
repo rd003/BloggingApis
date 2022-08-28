@@ -93,6 +93,8 @@ namespace BloggingApis.Controllers
 
                 return Ok(new LoginResponse
                 {
+                    Name=user.Name,
+                    Username=user.UserName,
                     Token = new JwtSecurityTokenHandler().WriteToken(token),
                     Expiration = token.ValidTo,
                     StatusCode = 1,
