@@ -1,4 +1,6 @@
-﻿using BloggingApis.Models.Domain;
+﻿using BloggingApis.Common;
+using BloggingApis.Models.Domain;
+using BloggingApis.Models.DTO;
 using BloggingApis.Services.Abstract;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -53,9 +55,12 @@ namespace BloggingApis.Services.Implimention
             var category = await context.BlogCategory.FindAsync(id);
             return category;
         }
-        public async Task<IEnumerable<BlogCategory>> GetAll()
+        public async Task<PagedList<BlogCategory>> GetAll(int pageNo, int pageSize)
         {
-            var data = await (from blogCategory in context.BlogCategory
+            const int maxPageSize = 50;
+            if (pageSize > maxPageSize)
+                pageSize = maxPageSize;
+            var categories =  (from blogCategory in context.BlogCategory
                                              join
                      parentBlogCategory in context.BlogCategory
                      on blogCategory.ParentCategory_Id equals parentBlogCategory.Id into blog_parent
@@ -66,8 +71,9 @@ namespace BloggingApis.Services.Implimention
                                                  Id = blogCategory.Id,
                                                  ParentCategoryName = parentBlogData.CategoryName,
                                                  ParentCategory_Id = blogCategory.ParentCategory_Id
-                                             }).ToListAsync();
-            return data;
+                                             }).AsQueryable();
+            var pagedList = await PagedList<BlogCategory>.ToPagedList(categories, pageNo, pageSize);
+            return pagedList;
         }
 
        

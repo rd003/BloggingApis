@@ -1,4 +1,6 @@
-﻿using BloggingApis.Models.Domain;
+﻿using BloggingApis.Common;
+using BloggingApis.Models.Domain;
+using BloggingApis.Models.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,6 @@ namespace BloggingApis.Services.Abstract
         public Task<bool> AddUpdate(BlogCategory category);
         public Task<bool> Delete(int id);
         public Task<BlogCategory> GetById(int id);
-        public Task<IEnumerable<BlogCategory>> GetAll();
+        public Task<PagedList<BlogCategory>> GetAll(int pageNo, int pageSizea);
     }
 }
