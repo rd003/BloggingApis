@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BloggingApis.Services.Implimention
@@ -55,27 +57,75 @@ namespace BloggingApis.Services.Implimention
             var category = await context.BlogCategory.FindAsync(id);
             return category;
         }
-        public async Task<PagedList<BlogCategory>> GetAll(int pageNo, int pageSize)
+        public async Task<PagedList<BlogCategory>> GetAll(GetAllBlogCategoryParams model)
         {
             const int maxPageSize = 50;
-            if (pageSize > maxPageSize)
-                pageSize = maxPageSize;
+            if (model.PageSize > maxPageSize)
+                model.PageSize = maxPageSize;
+            
+            if (!string.IsNullOrEmpty(model.Term))
+                model.Term = model.Term.ToLower();
             var categories =  (from blogCategory in context.BlogCategory
                                              join
                      parentBlogCategory in context.BlogCategory
                      on blogCategory.ParentCategory_Id equals parentBlogCategory.Id into blog_parent
                                              from parentBlogData in blog_parent.DefaultIfEmpty()
+                                             where string.IsNullOrWhiteSpace(model.Term) || blogCategory.CategoryName.ToLower().StartsWith(model.Term)
                                              select new BlogCategory
                                              {
                                                  CategoryName = blogCategory.CategoryName,
                                                  Id = blogCategory.Id,
                                                  ParentCategoryName = parentBlogData.CategoryName,
                                                  ParentCategory_Id = blogCategory.ParentCategory_Id
+              
                                              }).AsQueryable();
-            var pagedList = await PagedList<BlogCategory>.ToPagedList(categories, pageNo, pageSize);
+            //string msg = "";
+            //if (!string.IsNullOrEmpty(sortBy))
+            //{
+            //    string[] sortingArr = new string[] { "CategoryName","Id" };
+            //    if (sortingArr.Contains(sortBy))
+            //    {
+            //        msg = "Invaid coulumn";
+            //    }
+            //    if (sortOrder == "" || sortOrder == "asc")
+            //    {
+            //        categories.OrderBy(obj => sortBy);
+            //    }
+            //}
+            var pagedList = await PagedList<BlogCategory>.ToPagedList(categories, model.PageNo, model.PageSize);
             return pagedList;
         }
 
-       
+        //public  void ApplySort(ref IQueryable<BlogCategory> records, string orderByQueryString)
+        //{
+        //    if (!records.Any())
+        //        return;
+        //    if (string.IsNullOrWhiteSpace(orderByQueryString))
+        //    {
+        //        records = records.OrderBy(x => x.CategoryName);
+        //        return;
+        //    }
+        //    var orderParams = orderByQueryString.Trim().Split(',');
+        //    var propertyInfos = typeof(BlogCategory).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        //    var orderQueryBuilder = new StringBuilder();
+        //    foreach (var param in orderParams)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(param))
+        //            continue;
+        //        var propertyFromQueryName = param.Split(" ")[0];
+        //        var objectProperty = propertyInfos.FirstOrDefault(pi => pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
+        //        if (objectProperty == null)
+        //            continue;
+        //        var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
+        //        orderQueryBuilder.Append($"{objectProperty.Name.ToString()} {sortingOrder}, ");
+        //    }
+        //    var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
+        //    if (string.IsNullOrWhiteSpace(orderQuery))
+        //    {
+        //        records = records.OrderBy(x => x.CategoryName);
+        //        return;
+        //    }
+        //    records = records.OrderBy(orderQuery);
+        //}
     }
 }

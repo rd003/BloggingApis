@@ -39,9 +39,9 @@ namespace BloggingApis.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(int pageNo=1, int pageSize = 5)
+        public async Task<IActionResult> GetAll([FromQuery]GetAllBlogCategoryParams model)
         {
-            var data = await blogCategoryService.GetAll(pageNo, pageSize);
+            var data = await blogCategoryService.GetAll(model);
             return Ok(data);
         }
 

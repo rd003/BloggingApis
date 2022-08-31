@@ -14,6 +14,7 @@ namespace BloggingApis.Common
       //  public int TotalCount { get; private set; }
         public bool HasPrevious => CurrentPage > 1;
         public bool HasNext => CurrentPage < TotalPages;
+        public string Message { get; set; }
         public IEnumerable<T> Records{ get; private set; }
         public PagedList(IQueryable<T> items, int count, int pageNumber, int pageSize)
         {
