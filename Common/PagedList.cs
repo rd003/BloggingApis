@@ -15,10 +15,11 @@ namespace BloggingApis.Common
         public bool HasPrevious => CurrentPage > 1;
         public bool HasNext => CurrentPage < TotalPages;
         public string Message { get; set; }
+        public int TotalCount { get; set; }
         public IEnumerable<T> Records{ get; private set; }
         public PagedList(IQueryable<T> items, int count, int pageNumber, int pageSize)
         {
-          //  TotalCount = count;
+            TotalCount = count;
             PageSize = pageSize;
             CurrentPage = pageNumber;
             TotalPages = (int)Math.Ceiling(count / (double)pageSize);
