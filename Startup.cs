@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BloggingApis.Common.Implementation;
+using BloggingApis.Common.Service;
 using BloggingApis.Models.Domain;
 using BloggingApis.Services.Abstract;
 using BloggingApis.Services.Implimention;
@@ -36,10 +38,10 @@ namespace BloggingApis
             services.AddControllersWithViews();
             //services.AddControllers();
             services.AddTransient<IBlogCategoryService, BlogCategoryService>();
+            services.AddTransient<ISortHelper<BlogCategory>, SortHelper<BlogCategory>>();
             // For Entity Framework 
             string conn= Configuration.GetConnectionString("conn");
             services.AddDbContext<DatabaseContext>(options => options.UseSqlServer(conn));
-
             // For Identity  
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<DatabaseContext>()

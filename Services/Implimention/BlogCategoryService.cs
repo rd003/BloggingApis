@@ -1,4 +1,5 @@
 ﻿using BloggingApis.Common;
+using BloggingApis.Common.Service;
 using BloggingApis.Models.Domain;
 using BloggingApis.Models.DTO;
 using BloggingApis.Services.Abstract;
@@ -16,9 +17,11 @@ namespace BloggingApis.Services.Implimention
     public class BlogCategoryService : IBlogCategoryService
     {
         private readonly DatabaseContext context;
-        public BlogCategoryService(DatabaseContext context)
+        private readonly ISortHelper<BlogCategory> _sortHelper;
+        public BlogCategoryService(DatabaseContext context, ISortHelper<BlogCategory> sortHelper)
         {
             this.context = context;
+            this._sortHelper = sortHelper;
         }
         public async Task<bool> AddUpdate(BlogCategory category)
         {
@@ -60,10 +63,6 @@ namespace BloggingApis.Services.Implimention
         }
         public async Task<PagedList<BlogCategory>> GetAll(GetAllBlogCategoryParams model)
         {
-            //const int maxPageSize = 50;
-            //if (model.PageSize > maxPageSize)
-            //    model.PageSize = maxPageSize;
-            
             if (!string.IsNullOrEmpty(model.Term))
                 model.Term = model.Term.ToLower();
             var categories =  (from blogCategory in context.BlogCategory
@@ -80,41 +79,10 @@ namespace BloggingApis.Services.Implimention
                                                  ParentCategory_Id = blogCategory.ParentCategory_Id
               
                                              }).AsQueryable();
-            ApplySort(ref categories, model.OrderBy);
-            var pagedList = await PagedList<BlogCategory>.ToPagedList(categories, model.PageNo, model.PageSize);
+            var sortedCategories=this._sortHelper.ApplySort(categories, model.OrderBy);
+            var pagedList = await PagedList<BlogCategory>.ToPagedList(sortedCategories, model.PageNo, model.PageSize);
             return pagedList;
         }
 
-        private void ApplySort(ref IQueryable<BlogCategory> records, string orderByQueryString)
-        {
-            if (!records.Any())
-                return;
-            if (string.IsNullOrWhiteSpace(orderByQueryString))
-            {
-                records = records.OrderBy(x => x.Id);
-                return;
-            }
-            var orderParams = orderByQueryString.Trim().Split(',');
-            var propertyInfos = typeof(BlogCategory).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var orderQueryBuilder = new StringBuilder();
-            foreach (var param in orderParams)
-            {
-                if (string.IsNullOrWhiteSpace(param))
-                    continue;
-                var propertyFromQueryName = param.Split(" ")[0];
-                var objectProperty = propertyInfos.FirstOrDefault(pi => pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
-                if (objectProperty == null)
-                    continue;
-                var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
-                orderQueryBuilder.Append($"{objectProperty.Name.ToString()} {sortingOrder}, ");
-            }
-            var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
-            if (string.IsNullOrWhiteSpace(orderQuery))
-            {
-                records = records.OrderBy(x => x.Id);
-                return;
-            }
-            records = records.OrderBy(orderQuery);
-        }
     }
 }
