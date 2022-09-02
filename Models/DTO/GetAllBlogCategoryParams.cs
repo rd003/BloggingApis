@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 namespace BloggingApis.Models.DTO
 {
-    public class GetAllBlogCategoryParams
+    public class GetAllBlogCategoryParams: QueryStringParameter
     {
-        public int PageNo { get; set; }
-        public int PageSize { get; set; }
-        public string Term { get; set; }
+        public GetAllBlogCategoryParams()
+        {
+            OrderBy = "Id";
+        }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,9 +60,9 @@ namespace BloggingApis.Services.Implimention
         }
         public async Task<PagedList<BlogCategory>> GetAll(GetAllBlogCategoryParams model)
         {
-            const int maxPageSize = 50;
-            if (model.PageSize > maxPageSize)
-                model.PageSize = maxPageSize;
+            //const int maxPageSize = 50;
+            //if (model.PageSize > maxPageSize)
+            //    model.PageSize = maxPageSize;
             
             if (!string.IsNullOrEmpty(model.Term))
                 model.Term = model.Term.ToLower();
@@ -79,53 +80,41 @@ namespace BloggingApis.Services.Implimention
                                                  ParentCategory_Id = blogCategory.ParentCategory_Id
               
                                              }).AsQueryable();
-            //string msg = "";
-            //if (!string.IsNullOrEmpty(sortBy))
-            //{
-            //    string[] sortingArr = new string[] { "CategoryName","Id" };
-            //    if (sortingArr.Contains(sortBy))
-            //    {
-            //        msg = "Invaid coulumn";
-            //    }
-            //    if (sortOrder == "" || sortOrder == "asc")
-            //    {
-            //        categories.OrderBy(obj => sortBy);
-            //    }
-            //}
+            ApplySort(ref categories, model.OrderBy);
             var pagedList = await PagedList<BlogCategory>.ToPagedList(categories, model.PageNo, model.PageSize);
             return pagedList;
         }
 
-        //public  void ApplySort(ref IQueryable<BlogCategory> records, string orderByQueryString)
-        //{
-        //    if (!records.Any())
-        //        return;
-        //    if (string.IsNullOrWhiteSpace(orderByQueryString))
-        //    {
-        //        records = records.OrderBy(x => x.CategoryName);
-        //        return;
-        //    }
-        //    var orderParams = orderByQueryString.Trim().Split(',');
-        //    var propertyInfos = typeof(BlogCategory).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        //    var orderQueryBuilder = new StringBuilder();
-        //    foreach (var param in orderParams)
-        //    {
-        //        if (string.IsNullOrWhiteSpace(param))
-        //            continue;
-        //        var propertyFromQueryName = param.Split(" ")[0];
-        //        var objectProperty = propertyInfos.FirstOrDefault(pi => pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
-        //        if (objectProperty == null)
-        //            continue;
-        //        var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
-        //        orderQueryBuilder.Append($"{objectProperty.Name.ToString()} {sortingOrder}, ");
-        //    }
-        //    var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
-        //    if (string.IsNullOrWhiteSpace(orderQuery))
-        //    {
-        //        records = records.OrderBy(x => x.CategoryName);
-        //        return;
-        //    }
-        //    records = records.OrderBy(orderQuery);
-        //}
+        private void ApplySort(ref IQueryable<BlogCategory> records, string orderByQueryString)
+        {
+            if (!records.Any())
+                return;
+            if (string.IsNullOrWhiteSpace(orderByQueryString))
+            {
+                records = records.OrderBy(x => x.Id);
+                return;
+            }
+            var orderParams = orderByQueryString.Trim().Split(',');
+            var propertyInfos = typeof(BlogCategory).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var orderQueryBuilder = new StringBuilder();
+            foreach (var param in orderParams)
+            {
+                if (string.IsNullOrWhiteSpace(param))
+                    continue;
+                var propertyFromQueryName = param.Split(" ")[0];
+                var objectProperty = propertyInfos.FirstOrDefault(pi => pi.Name.Equals(propertyFromQueryName, StringComparison.InvariantCultureIgnoreCase));
+                if (objectProperty == null)
+                    continue;
+                var sortingOrder = param.EndsWith(" desc") ? "descending" : "ascending";
+                orderQueryBuilder.Append($"{objectProperty.Name.ToString()} {sortingOrder}, ");
+            }
+            var orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
+            if (string.IsNullOrWhiteSpace(orderQuery))
+            {
+                records = records.OrderBy(x => x.Id);
+                return;
+            }
+            records = records.OrderBy(orderQuery);
+        }
     }
 }
