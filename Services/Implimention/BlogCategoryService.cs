@@ -85,7 +85,7 @@ namespace BloggingApis.Services.Implimention
                 model.Term = model.Term.ToLower();
             var categories = await this.GetBlogCategories(model.Term);
             var sortedCategories=this._sortHelper.ApplySort(categories, model.OrderBy);
-            var pagedList = await PagedList<BlogCategory>.ToPagedList(sortedCategories, model.PageNo, model.PageSize);
+            var pagedList = PagedList<BlogCategory>.ToPagedList(sortedCategories, model.PageNo, model.PageSize);
             return pagedList;
         }
 
