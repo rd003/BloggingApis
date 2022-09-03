@@ -45,6 +45,13 @@ namespace BloggingApis.Controllers
             return Ok(data);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCatgoriesWithoutPaging()
+        {
+            IEnumerable<BlogCategory> data = (await blogCategoryService.GetBlogCategories()).ToList();
+            return Ok(data);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

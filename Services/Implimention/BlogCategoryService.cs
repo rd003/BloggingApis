@@ -61,24 +61,29 @@ namespace BloggingApis.Services.Implimention
             var category = await context.BlogCategory.FindAsync(id);
             return category;
         }
+        public async Task<IQueryable<BlogCategory>> GetBlogCategories(string term="")
+        {
+            var categories = await (from blogCategory in context.BlogCategory
+                              join
+      parentBlogCategory in context.BlogCategory
+      on blogCategory.ParentCategory_Id equals parentBlogCategory.Id into blog_parent
+                              from parentBlogData in blog_parent.DefaultIfEmpty()
+                              where string.IsNullOrWhiteSpace(term) || blogCategory.CategoryName.ToLower().StartsWith(term)
+                              select new BlogCategory
+                              {
+                                  CategoryName = blogCategory.CategoryName,
+                                  Id = blogCategory.Id,
+                                  ParentCategoryName = parentBlogData.CategoryName,
+                                  ParentCategory_Id = blogCategory.ParentCategory_Id
+
+                              }).ToListAsync();
+            return categories.AsQueryable();
+        }
         public async Task<PagedList<BlogCategory>> GetAll(GetAllBlogCategoryParams model)
         {
             if (!string.IsNullOrEmpty(model.Term))
                 model.Term = model.Term.ToLower();
-            var categories =  (from blogCategory in context.BlogCategory
-                                             join
-                     parentBlogCategory in context.BlogCategory
-                     on blogCategory.ParentCategory_Id equals parentBlogCategory.Id into blog_parent
-                                             from parentBlogData in blog_parent.DefaultIfEmpty()
-                                             where string.IsNullOrWhiteSpace(model.Term) || blogCategory.CategoryName.ToLower().StartsWith(model.Term)
-                                             select new BlogCategory
-                                             {
-                                                 CategoryName = blogCategory.CategoryName,
-                                                 Id = blogCategory.Id,
-                                                 ParentCategoryName = parentBlogData.CategoryName,
-                                                 ParentCategory_Id = blogCategory.ParentCategory_Id
-              
-                                             }).AsQueryable();
+            var categories = await this.GetBlogCategories(model.Term);
             var sortedCategories=this._sortHelper.ApplySort(categories, model.OrderBy);
             var pagedList = await PagedList<BlogCategory>.ToPagedList(sortedCategories, model.PageNo, model.PageSize);
             return pagedList;

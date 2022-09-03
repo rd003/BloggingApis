@@ -13,6 +13,8 @@ namespace BloggingApis.Services.Abstract
         public Task<bool> AddUpdate(BlogCategory category);
         public Task<bool> Delete(int id);
         public Task<BlogCategory> GetById(int id);
+        public Task<IQueryable<BlogCategory>> GetBlogCategories(string term = "");
         public Task<PagedList<BlogCategory>> GetAll(GetAllBlogCategoryParams model);
+
     }
 }
