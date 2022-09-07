@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BloggingApis.Models.Domain;
 using BloggingApis.Models.DTO;
+using BloggingApis.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -22,13 +23,14 @@ namespace BloggingApis.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
-        private readonly IConfiguration _configuration;
-        public AuthenticationController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        private readonly ITokenService _tokenService;
+        private readonly DatabaseContext _context;
+        public AuthenticationController(ITokenService tokenService,UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, DatabaseContext context)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
-            _configuration = configuration;
-
+            this._tokenService = tokenService;
+            _context = context;
         }
 
         [HttpPost]
@@ -89,25 +91,36 @@ namespace BloggingApis.Controllers
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
 
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                    );
+                var token = _tokenService.GetToken(authClaims);
+                string refreshToken = _tokenService.GetRefreshToken();
+                //save it with exp date in database
+                var tokenInfo = _context.TokenInfo.FirstOrDefault(a => a.UserName == user.UserName);
+                if (tokenInfo is null)
+                {
+                    var ti = new TokenInfo { 
+                        UserName = user.UserName,
+                        RefreshToken = refreshToken,
+                        RefreshTokenExpiryTime = DateTime.Now.AddDays(7)
+                    };
+                    _context.TokenInfo.Add(ti);
+                }
+                else
+                {
+                    tokenInfo.RefreshToken = refreshToken;
+                    tokenInfo.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                }
+                _context.SaveChanges();
 
                 return Ok(new LoginResponse
                 {
-                    Name=user.Name,
-                    Username=user.UserName,
-                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Name = user.Name,
+                    Username = user.UserName,
+                    Token = token.TokenString,
+                    RefreshToken = refreshToken,
                     Expiration = token.ValidTo,
                     StatusCode = 1,
                     Message = "Logged in"
-                });
+                }) ;
             }
             return Ok(new LoginResponse { StatusCode = 0, Message = "Invalid Username or Password", Token = "", Expiration = null });
 

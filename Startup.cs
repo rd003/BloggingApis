@@ -39,6 +39,7 @@ namespace BloggingApis
             //services.AddControllers();
             services.AddTransient<IBlogCategoryService, BlogCategoryService>();
             services.AddTransient<ISortHelper<BlogCategory>, SortHelper<BlogCategory>>();
+            services.AddTransient<ITokenService,TokenService>();
             // For Entity Framework 
             string conn= Configuration.GetConnectionString("conn");
             services.AddDbContext<DatabaseContext>(options => options.UseSqlServer(conn));

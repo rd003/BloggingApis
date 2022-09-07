@@ -18,5 +18,6 @@ namespace BloggingApis.Models.Domain
             base.OnModelCreating(builder);
         }
         public DbSet<BlogCategory> BlogCategory { get; set; }
+        public DbSet<TokenInfo> TokenInfo { get; set; }
     }
 }
