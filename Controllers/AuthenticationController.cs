@@ -94,20 +94,21 @@ namespace BloggingApis.Controllers
                 var token = _tokenService.GetToken(authClaims);
                 string refreshToken = _tokenService.GetRefreshToken();
                 //save it with exp date in database
+                DateTime refreshTokenExpiryTime = DateTime.Now.AddDays(2);
                 var tokenInfo = _context.TokenInfo.FirstOrDefault(a => a.UserName == user.UserName);
                 if (tokenInfo is null)
                 {
                     var ti = new TokenInfo { 
                         UserName = user.UserName,
                         RefreshToken = refreshToken,
-                        RefreshTokenExpiryTime = DateTime.Now.AddDays(7)
+                        RefreshTokenExpiryTime = refreshTokenExpiryTime
                     };
                     _context.TokenInfo.Add(ti);
                 }
                 else
                 {
                     tokenInfo.RefreshToken = refreshToken;
-                    tokenInfo.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                    tokenInfo.RefreshTokenExpiryTime = refreshTokenExpiryTime;
                 }
                 _context.SaveChanges();
 
